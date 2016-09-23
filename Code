@@ -1,0 +1,262 @@
+package com.cooksys.assessment;
+
+import java.awt.EventQueue;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.ListSelectionModel;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import java.awt.Font;
+import java.util.ArrayList;
+import java.util.List;
+import java.awt.Color;
+import javax.swing.JMenu;
+import javax.swing.ImageIcon;
+import javax.swing.JList;
+import java.awt.SystemColor;
+import javax.swing.UIManager;
+import javax.swing.DefaultListModel;
+import java.io.File;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+
+public class Window {
+
+	private JFrame frmPcPartBuilder;
+
+	/**
+	 * Launch the application. The main method is the entry point to a Java application. 
+	 * For this assessment, you shouldn't have to add anything to this.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Window window = new Window();
+					window.frmPcPartBuilder.setVisible(true);
+				}//end try
+				catch (Exception e) {e.printStackTrace();}
+			}//end run
+		});
+	}// end main
+	
+	//JAXB annotation class, creating an instance of the computer parts.
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class computerParts {
+	    @XmlElement(name = "part")
+	    private List<String> parts;
+	    public List<String> getPart() { return parts; }//returns the instance of computerParts as a list.
+	    public void placePart(List<String> part) { this.parts = part; }//creates an instance of computerParts with the~
+	}//end computerParts                                                ~annotated xml elements of the passed list.			
+	
+	/**
+	 * save method is called when the save menu item is clicked. Takes in the DefaultListModel from the right panel at the
+	 * time of save, sends it to get annotated and gets put into an instance of the class computerParts, then gets 
+	 * converted into an xml file by marshaling the computerParts instance.
+	 */
+	public void save(DefaultListModel<String> computerPartsRight) throws Exception {
+	    ArrayList<String> savedParts = new ArrayList<>();
+	    for (int i = 0; i < computerPartsRight.size(); i++) {
+	        savedParts.add((String) computerPartsRight.getElementAt(i));
+	    }//end for
+	    computerParts parts = new computerParts();
+	    parts.placePart(savedParts);
+	    //File file = new File("C:\\ComputerParts.xml"); 
+	    File file = new File("C:\\Users\\clrichey\\Desktop\\ComputerParts.xml");	    
+	    JAXBContext context = JAXBContext.newInstance(computerParts.class);
+	    Marshaller marshaller = context.createMarshaller();
+	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	    marshaller.marshal(parts, file);
+	}//end save
+
+	/**
+	 * load method is called when load menu item is clicked. This method finds a previously saved xml file and converts it
+	 * to an object of the computerParts class by unmarsaling. This makes the instance of computerParts with the previously
+	 * saved right panel's parts. The object is then loaded into a list and returned to the load menu item's click event.   
+	 */
+	public List<String> load() throws Exception {
+	    File file = new File("C:\\Users\\clrichey\\Desktop\\ComputerParts.xml");
+	    //File file = new File("C:\\ComputerParts.xml");
+	    JAXBContext context = JAXBContext.newInstance(computerParts.class);
+	    Unmarshaller unmarshaller = context.createUnmarshaller();
+		computerParts parts = (computerParts) unmarshaller.unmarshal(file);
+		List<String> loadParts = parts.getPart();
+		return loadParts;
+	}//end load
+
+	/**
+	 * Create the application. This is the constructor for this Window class.
+	 * All of the code here will be executed as soon as a Window object is made.
+	 */
+	public Window() {
+		initialize();
+	}//end window
+
+	/**
+	 * Initialize the contents of the frame. This is where Window Builder
+	 * will generate its code.
+	 */
+	public void initialize() {
+		frmPcPartBuilder = new JFrame();
+		frmPcPartBuilder.setBackground(new Color(0, 51, 153));
+		frmPcPartBuilder.setForeground(new Color(0, 51, 153));
+		frmPcPartBuilder.setFont(new Font("Georgia", Font.PLAIN, 12));
+		frmPcPartBuilder.setTitle("PC Part Builder");
+		frmPcPartBuilder.setBounds(100, 100, 600, 500);
+		frmPcPartBuilder.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JPanel leftPanel = new JPanel();//left panel to hold jlist.
+		leftPanel.setBackground(SystemColor.text);
+		leftPanel.setBounds(0, 0, 200, 440);
+		frmPcPartBuilder.getContentPane().add(leftPanel);
+		leftPanel.setLayout(null);
+		
+		//database for left panel jlist leftList.
+		final DefaultListModel<String> computerPartsLeft = new DefaultListModel<String>();
+		computerPartsLeft.addElement("Case");
+		computerPartsLeft.addElement("Motherboard");
+		computerPartsLeft.addElement("CPU");
+		computerPartsLeft.addElement("GPU");
+		computerPartsLeft.addElement("PSU");
+		computerPartsLeft.addElement("RAM");
+		computerPartsLeft.addElement("HDD");
+		
+		//jlist that displays in the left panel in the window.
+		final JList<String> leftList = new JList<String>(computerPartsLeft);
+		leftList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		leftList.setSelectedIndex(0);
+		leftList.setVisibleRowCount(7);
+		leftList.setBounds(0, 0, 200, 440);
+		leftPanel.add(leftList);
+		
+		
+		JPanel rightPanel = new JPanel();//right panel to hold jlist.
+		rightPanel.setBackground(SystemColor.text);
+		rightPanel.setBounds(391, 0, 200, 440);
+		frmPcPartBuilder.getContentPane().add(rightPanel);
+		rightPanel.setLayout(null);
+		
+		//database for left panel jlist leftList.
+		final DefaultListModel<String> computerPartsRight = new DefaultListModel<String>();
+		
+		//jlist that displays in the left panel in the window.
+		final JList<String> rightList = new JList<String>(computerPartsRight);
+		rightList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		rightList.setSelectedIndex(0);
+		rightList.setVisibleRowCount(7);
+		rightList.setBounds(0, 0, 190, 440);
+		rightPanel.add(rightList);
+		
+		
+		JPanel midPanel = new JPanel();// mid panel to hold buttons.
+		midPanel.setBackground(SystemColor.menu);
+		midPanel.setBounds(199, 0, 193, 440);
+		frmPcPartBuilder.getContentPane().add(midPanel);
+		midPanel.setLayout(null);
+		
+		//button that removes an item from the right panel and moves it back to the left panel.
+		JButton remove = new JButton("<<");
+		remove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int index= rightList.getSelectedIndex();
+					if(index >= 0)//avoids out of bounds exception.
+						{
+							computerPartsLeft.addElement(computerPartsRight.getElementAt(index));
+							computerPartsRight.remove(index);
+						}//end if
+				}//end actionPerformed
+			});//end ActionListener
+			remove.setBounds(52, 243, 89, 23);
+			midPanel.add(remove);
+		
+		//button that adds an item from the left panel to the right panel.
+		JButton add = new JButton(">>");
+		add.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int index= leftList.getSelectedIndex();
+				if(index >= 0)//avoids out of bounds exception
+				{
+					computerPartsRight.addElement(computerPartsLeft.getElementAt(index));
+					computerPartsLeft.remove(index);
+				}//end if
+			}//end actionPerformed
+		});//end ActionListener
+		add.setBounds(52, 177, 89, 23);
+		midPanel.add(add);
+		
+	
+		//menu bar that contains the dropdown menu for save, load, and exit.
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.setBackground(UIManager.getColor("Button.background"));
+		frmPcPartBuilder.setJMenuBar(menuBar);
+		
+		JMenu menu = new JMenu("");
+		menuBar.add(menu);
+		
+		JMenu file = new JMenu("File");
+		menuBar.add(file);
+		
+		//save menu item calls the save method and exports the items in the right panel to a xml file.
+		JMenuItem mSave = new JMenuItem("Save");
+		mSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					save(computerPartsRight);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}//end catch
+			}//end actionPerformed
+		});//end ActionListener
+		mSave.setIcon(new ImageIcon(Window.class.getResource("/javax/swing/plaf/metal/icons/ocean/floppy.gif")));
+		file.add(mSave);
+		
+		// load menu item calls the load method and loads the xml contents into the right panel.
+		JMenuItem mLoad = new JMenuItem("Load");
+		mLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					List<String> loadParts= load();//gets list of parts from loaded xml file
+					for(int i=0; i<computerPartsRight.size(); i++){
+						computerPartsLeft.addElement(computerPartsRight.get(i));
+					}
+					computerPartsRight.clear();
+					if(loadParts!= null){
+						for (int i=0; i<loadParts.size(); i++){
+							computerPartsRight.addElement(loadParts.get(i));
+							computerPartsLeft.removeElement(loadParts.get(i));
+						}//end for
+					}//end if
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}//end catch
+			}//end actionPerformed
+		});//end ActionListener
+		mLoad.setIcon(new ImageIcon(Window.class.getResource("/javax/swing/plaf/metal/icons/ocean/newFolder.gif")));
+		file.add(mLoad);
+			
+		//exit menu item exits the program and terminates.
+		JMenuItem mntmNewMenuItem = new JMenuItem("Exit");
+		mntmNewMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}//end actionPerformed
+		});//end ActionLister
+		mntmNewMenuItem.setIcon(new ImageIcon(Window.class.getResource(
+				"/javax/swing/plaf/metal/icons/ocean/close-pressed.gif")));
+		file.add(mntmNewMenuItem);
+		frmPcPartBuilder.getContentPane().setLayout(null);
+		
+	}//end initialize
+
+}//end class Window
